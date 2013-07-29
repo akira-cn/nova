@@ -1,0 +1,5 @@
+<nova>
+    <object name="com.weizoo.nova.js.test.Echo" exports="echo"></object>
+    <object name="com.weizoo.nova.js.test.TestClass" exports="TestClass"></object>
+    <object name="com.weizoo.nova.js.network.WebSocket" exports="WebSocket"></object>
+</nova>

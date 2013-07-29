@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Nova Layout</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	<body>
+		<h1>Hello, world11 ~!</h1>
+		<div id="res"></div>
+	</body>
+	<script src="js/nova.js"></script>
+	<script type="text/javascript">
+		window.addEventListener('novaReady', function(evt){
+			var el = document.getElementById('res');
+			el.innerHTML += window.nova.echo.message("Hello") + "<br/>";
+			
+			window.nova.echo.message('中文测试', function(result){
+				el.innerHTML += result + "<br/>";
+			});
+
+			var ws = new window.nova.WebSocket('ws://360.75team.com:8080');
+
+			console.log(ws.URL);
+
+			ws.onopen = function(){
+				console.log('opened');
+				ws.send('abc');
+				console.log(ws.readyState);
+			}
+
+			ws.onmessage = function(evt){
+				console.log(evt.data);
+			}
+
+			ws.onclose = function(){
+				console.log('closed');
+			}
+		});
+	</script>
+</html>
