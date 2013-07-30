@@ -1,6 +1,5 @@
 package com.weizoo.nova.js.network;
 
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.koushikdutta.async.callback.CompletedCallback;
