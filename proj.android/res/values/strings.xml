@@ -4,5 +4,15 @@
     <string name="app_name">Nova</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-
+    
+    <string name="mimetype_html">text/html</string>
+    <string name="mimetype_htm">text/html</string>
+    <string name="mimetype_txt">text/plain</string>
+    <string name="mimetype_css">text/css</string>
+    <string name="mimetype_js">application/x-javascript</string>
+    <string name="mimetype_txt">text/plain</string>
+    <string name="mimetype_png">image/png</string>
+    <string name="mimetype_jpg">image/jpeg</string>
+    <string name="mimetype_gif">image/gif</string>
+	    
 </resources>

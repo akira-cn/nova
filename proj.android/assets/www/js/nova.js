@@ -99,6 +99,7 @@ var nova = {
 		//window['.a.b'] -> window.a.b
 
 		for(var module in window){
+			
 			if(/^\.nova/.test(module)){ 
 				var _interface = window[module];
 
@@ -115,10 +116,6 @@ var nova = {
 				delete window[module];
 			}
 		}
- 		var ev = document.createEvent('Events');
- 		ev.initEvent('novaReady', false, true);
- 		window.dispatchEvent(ev);
- 		delete window.nova._init;
 	}
 };
 
@@ -148,6 +145,5 @@ window.addEventListener('novaCallbackEvent', function(evt){
 	}
 });
 
-window.nova = nova;
-
+nova._init();
 })();

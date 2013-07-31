@@ -1,5 +1,8 @@
 package com.weizoo.nova.lib;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import android.annotation.SuppressLint;
@@ -19,17 +22,70 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 
+import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.callback.CompletedCallback;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
+import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
+import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.weizoo.nova.R;
 import com.weizoo.nova.js.JSProxy;
 
 public class NovaWebActivity extends Activity {
 	
 	protected WebView mWebView;
+	private AsyncHttpServer httpServer;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_novaweb);
+		
+        httpServer = new AsyncHttpServer();
+        httpServer.setErrorCallback(new CompletedCallback() {
+            @Override
+            public void onCompleted(Exception ex) {
+                //TODO:
+            }
+        });
+        httpServer.listen(AsyncServer.getDefault(), 7500);
+
+        httpServer.get("/.*", new HttpServerRequestCallback() {
+            @Override
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {            	
+            	String file = "www" + request.getPath();
+            	int count;
+				try {
+					InputStream in = getAssets().open(file); 
+					count = in.available();
+					byte[] b = new byte[count];
+	            	int readCount = 0; // 已经成功读取的字节的个数
+					while (readCount < count) {
+						readCount += in.read(b, readCount, 
+							 count - readCount);
+					}	    
+					String data = new String(b, "UTF-8"); 
+					
+					Log.d("Native", response.getHeaders().toString());
+					String exts = file.replaceAll("^.*[.]", "");
+					String contentType;
+					
+					try {
+						Field field = R.string.class.getField("mimetype_" + exts);
+						int id = field.getInt(new R.string()); 
+						contentType = getResources().getString(id);
+					} catch (Exception e) {
+						contentType = "text/plain";
+					}
+					
+					response.send(contentType, data);
+	            	
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            }
+        });
 		this.init();
 	}
 	
@@ -40,7 +96,9 @@ public class NovaWebActivity extends Activity {
         
         initProxy();
 		
-        mWebView.loadUrl("file:///android_asset/www/index.html");
+        //mWebView.loadUrl("file:///android_asset/www/index.html");
+        mWebView.loadUrl("http://localhost:7500/index.html");
+        
 	    mWebView.setWebViewClient(mViewClient);
 	    mWebView.setWebChromeClient(mChromeClient);
 	    
@@ -125,12 +183,6 @@ public class NovaWebActivity extends Activity {
 	        view.loadUrl(url);
 	        return true;
 	    }
-        
-	    @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-            view.loadUrl("javascript:nova._init();");
-        }
         
 	    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
 	        if (view == null || TextUtils.isEmpty(view.getUrl())) {

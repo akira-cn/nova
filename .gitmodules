@@ -4,3 +4,6 @@
 [submodule "libs/angular.js"]
 	path = libs/angular.js
 	url = git@github.com:akira-cn/angular.js.git
+[submodule "libs/bootstrap"]
+	path = libs/bootstrap
+	url = git@github.com:akira-cn/bootstrap.git
