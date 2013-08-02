@@ -7,23 +7,86 @@
     <meta charset="utf-8" />
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/app.css">
-  <script src="js/nova.js"></script>
-  <script src="js/angular/angular.js"></script>
-  <script src="js/ui-bootstrap-tpls-0.5.0-SNAPSHOT.js"></script>
+  <link rel="stylesheet" href="css/mobile-nav.css">  
+  <script src="js/lib/nova.js"></script>
+  <script src="js/lib/angular.js"></script>
+  <script src="js/lib/mobile-nav.js"></script>
+  <script src="js/lib/ui-bootstrap-tpls-0.5.0-SNAPSHOT.js"></script>
   <script src="js/app.js"></script>
 </head>
-<body>
-    <div class="wrap" ng-controller="MyCtrl">
-		<accordion>
-            <accordion-group heading="title">This has a one word title.</accordion-group>
-            <accordion-group heading="Title2='Title 2' ">This also has a one word title.</accordion-group>
-            <accordion-group heading=" 'Title 3' ">This has a title with spaces!</accordion-group>
-		</accordion>
+<body ng-controller="MainCtrl">
+    <mobile-view></mobile-view>
+<!--
+
+  <div ng-controller="CarouselDemoCtrl">
+    <carousel interval="myInterval">
+      <slide ng-repeat="slide in slides" active="slide.active">
+        <img ng-src="{{slide.image}}" style="margin:auto;">
+        <div class="carousel-caption">
+          <h4>Slide {{$index}}</h4>
+          <p>{{slide.text}}</p>
+        </div>
+      </slide>
+    </carousel>
+    <div class="row-fluid">
+      <div class="span6">
+        <ul>
+          <li ng-repeat="slide in slides">
+            <button class="btn btn-mini" ng-class="{'btn-info': !slide.active, 'btn-success': slide.active}" ng-disabled="slide.active" ng-click="slide.active = true">select</button>
+            {{$index}}: {{slide.text}}
+          </li>
+        </ul>
+        <a class="btn" ng-click="addSlide()">Add Slide</a>
+      </div>
+      <div class="span6">
+        Interval, in milliseconds: <input type="number" ng-model="myInterval">
+        <br />Enter a negative number to stop the interval.
+      </div>
     </div>
+  </div>
+
+  <div ng-controller="CollapseDemoCtrl">
+    <button class="btn" ng-click="isCollapsed = !isCollapsed">Toggle collapse</button>
+    <hr>
+    <div collapse="isCollapsed">
+      <div class="well well-large">Some content</div> 
+    </div>
+  </div>
+
+  <div ng-controller="DatepickerDemoCtrl">
+      <datepicker ng-model="dt" show-weeks="showWeeks" starting-day="1" date-disabled="disabled(date, mode)" min="minDate" max="'2015-06-22'"></datepicker>
+      <pre>Selected date is: <em>{{dt | date:'fullDate' }}</em></pre>
+
+      <button class="btn btn-small btn-inverse" ng-click="today()">Today</button>
+      <button class="btn btn-small btn-success" ng-click="toggleWeeks()">Toggle Weeks</button>
+      <button class="btn btn-small btn-danger" ng-click="clear()">Clear</button>
+      <button class="btn btn-small" ng-click="toggleMin()">After today restriction</button>
+  </div>
+
+  <div ng-controller="DialogDemoCtrl">
+      <div class="row-fluid">
+          <div class="span6">
+              <label class="checkbox"><input type=checkbox ng-model="opts.backdrop">Show backdrop</label>
+              <label class="checkbox"><input type=checkbox ng-model="opts.dialogFade">Fade modal dialog </label>
+              <label class="checkbox"><input type=checkbox ng-disabled="!opts.backdrop" ng-model="opts.backdropFade">Fade Backdrop</label>
+              <hr>
+              <label class="checkbox"><input type=checkbox ng-model="opts.keyboard">Close on Escape</label>
+              <label class="checkbox"><input type=checkbox ng-disabled="!opts.backdrop" ng-model="opts.backdropClick">Close on backdrop click</label>
+          </div>
+          <div class="span6">
+              <p>Change options at will and press the open dialog button below!</p>
+              <p><button class="btn btn-primary" ng-click="openDialog()">Open Dialog</button></p>
+
+              <p>Alternatively open a simple message box:</p>
+              <p><button class="btn btn-primary" ng-click="openMessageBox()">Open Message Box</button></p>
+          </div>
+      </div>
+  </div>
+-->
 </body>
 <script type="text/javascript">
-	/*window.addEventListener('novaReady', function(evt){
-		var el = document.getElementById('res');
+    //alert(nova.WebSocket);
+		/*var el = document.getElementById('res');
 		el.innerHTML += window.nova.echo.message("Hello") + "<br/>";
 		
 		window.nova.echo.message('中文测试', function(result){
@@ -46,7 +109,6 @@
 
 		ws.onclose = function(){
 			console.log('closed');
-		}
-	});*/
+		}*/
 </script>
 </html>

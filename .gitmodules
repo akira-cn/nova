@@ -7,3 +7,9 @@
 [submodule "libs/bootstrap"]
 	path = libs/bootstrap
 	url = git@github.com:akira-cn/bootstrap.git
+[submodule "libs/angular-mobile-nav"]
+	path = libs/angular-mobile-nav
+	url = git@github.com:akira-cn/angular-mobile-nav.git
+[submodule "pjax"]
+	path = pjax
+	url = git@github.com:welefen/pjax.git
