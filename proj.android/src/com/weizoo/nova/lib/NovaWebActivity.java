@@ -1,5 +1,8 @@
 package com.weizoo.nova.lib;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -7,11 +10,13 @@ import java.lang.reflect.Method;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -64,9 +69,8 @@ public class NovaWebActivity extends Activity {
 						readCount += in.read(b, readCount, 
 							 count - readCount);
 					}	    
-					String data = new String(b, "UTF-8"); 
 					
-					Log.d("Native", response.getHeaders().toString());
+					
 					String exts = file.replaceAll("^.*[.]", "");
 					String contentType;
 					
@@ -77,9 +81,25 @@ public class NovaWebActivity extends Activity {
 					} catch (Exception e) {
 						contentType = "text/plain";
 					}
-					
-					response.send(contentType, data);
-	            	
+					if(contentType.startsWith("text") || contentType.startsWith("application/x-javascript")){
+						String data = new String(b, "UTF-8");
+						response.send(contentType, data);
+					}else if(contentType.startsWith("image")){
+						//data = "data:" + contentType + ";base64," + Base64.encodeToString(b, Base64.DEFAULT);
+						//data = new String(b, "UTF-8");
+						File dir = getApplicationContext().getFilesDir();
+						File tempFile = File.createTempFile("nova", ".tmp", dir);
+						FileOutputStream fout = new FileOutputStream(tempFile);
+						fout.write(b); 
+				        fout.close(); 
+				        response.sendFile(tempFile);
+				        tempFile.delete();
+						//Log.d("Native", data);
+					}else{
+						//TODO: support other types
+						String data = "";
+						response.send(contentType, data);
+					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -179,7 +199,7 @@ public class NovaWebActivity extends Activity {
 	
 	private WebViewClient mViewClient = new WebViewClient() {
 	    @Override
-	    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+	    public boolean shouldOverrideUrlLoading(WebView view, String url) {  	
 	        view.loadUrl(url);
 	        return true;
 	    }

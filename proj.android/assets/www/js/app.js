@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp',['ui.bootstrap','ajoslin.mobile-navigate'])
+var myApp = angular.module('myApp',['ui.bootstrap','ajoslin.mobile-navigate','angular-gestures'])
 .config(function($routeProvider) {
   $routeProvider.when("/", {
     templateUrl: "inc/home.html"
@@ -21,7 +21,36 @@ var myApp = angular.module('myApp',['ui.bootstrap','ajoslin.mobile-navigate'])
   });
 })
 .controller('MainCtrl', function($scope, $navigate) {
-  $scope.$navigate = $navigate;
+  //$scope.$navigate = $navigate;
+  var i = 0, guard = false;
+
+  $scope.nav = {
+    next: function(){
+      if(guard){
+        return;
+      }
+      if(i < 2){
+        $navigate.go('/' + ++i);
+        guard = true;
+        setTimeout(function(){
+          guard = false;
+        }, 300);
+      }
+    },
+    back: function(){
+      if(guard){
+        return;
+      }
+      if(i > 0){ 
+        $navigate.back();
+        i--;
+        guard = true;
+        setTimeout(function(){
+          guard = false;
+        }, 300);
+      }
+    }
+  }
 })
 .controller('AccordionDemoCtrl', function($scope){
   $scope.oneAtATime = true;
