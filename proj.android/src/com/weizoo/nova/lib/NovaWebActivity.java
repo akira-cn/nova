@@ -1,22 +1,14 @@
 package com.weizoo.nova.lib;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -27,103 +19,40 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.callback.CompletedCallback;
-import com.koushikdutta.async.http.server.AsyncHttpServer;
-import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
-import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
-import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.weizoo.nova.R;
 import com.weizoo.nova.js.JSProxy;
 
 public class NovaWebActivity extends Activity {
 	
-	protected WebView mWebView;
-	private AsyncHttpServer httpServer;
+	protected NovaWebView mWebView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_novaweb);
-		
-        httpServer = new AsyncHttpServer();
-        httpServer.setErrorCallback(new CompletedCallback() {
-            @Override
-            public void onCompleted(Exception ex) {
-                //TODO:
-            }
-        });
-        httpServer.listen(AsyncServer.getDefault(), 7500);
-
-        httpServer.get("/.*", new HttpServerRequestCallback() {
-            @Override
-            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {            	
-            	String file = "www" + request.getPath();
-            	int count;
-				try {
-					InputStream in = getAssets().open(file); 
-					count = in.available();
-					byte[] b = new byte[count];
-	            	int readCount = 0; // 已经成功读取的字节的个数
-					while (readCount < count) {
-						readCount += in.read(b, readCount, 
-							 count - readCount);
-					}	    
-					
-					
-					String exts = file.replaceAll("^.*[.]", "");
-					String contentType;
-					
-					try {
-						Field field = R.string.class.getField("mimetype_" + exts);
-						int id = field.getInt(new R.string()); 
-						contentType = getResources().getString(id);
-					} catch (Exception e) {
-						contentType = "text/plain";
-					}
-					if(contentType.startsWith("text") || contentType.startsWith("application/x-javascript")){
-						String data = new String(b, "UTF-8");
-						response.send(contentType, data);
-					}else if(contentType.startsWith("image")){
-						//data = "data:" + contentType + ";base64," + Base64.encodeToString(b, Base64.DEFAULT);
-						//data = new String(b, "UTF-8");
-						File dir = getApplicationContext().getFilesDir();
-						File tempFile = File.createTempFile("nova", ".tmp", dir);
-						FileOutputStream fout = new FileOutputStream(tempFile);
-						fout.write(b); 
-				        fout.close(); 
-				        response.sendFile(tempFile);
-				        tempFile.delete();
-						//Log.d("Native", data);
-					}else{
-						//TODO: support other types
-						String data = "";
-						response.send(contentType, data);
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
-        });
+	}
+	@Override
+	protected void onStart(){
+		super.onStart();
 		this.init();
 	}
 	
+	@Override 
+	protected void onStop(){
+		super.onStop();
+	}
+	
 	protected void init(){
-		mWebView = (WebView) findViewById(R.id.web_nova);
+		mWebView = (NovaWebView) findViewById(R.id.web_nova);
 		initWebSettings();
         mWebView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         
         initProxy();
 		
-        //mWebView.loadUrl("file:///android_asset/www/index.html");
-        mWebView.loadUrl("http://localhost:7500/index.html");
-        
+        //mWebView.loadUrl("http://127.0.0.1:7501/index.html");
+        mWebView.loadUrl("file:///android_asset/www/index.html");
 	    mWebView.setWebViewClient(mViewClient);
 	    mWebView.setWebChromeClient(mChromeClient);
-	    
-	    //Echo echo = new Echo();
-	    //echo.prepareActivity(this, ".nova.echoApi");
 	}
 	
     private void initProxy(){
@@ -142,7 +71,6 @@ public class NovaWebActivity extends Activity {
 				xmlBirds.next();
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
@@ -150,6 +78,7 @@ public class NovaWebActivity extends Activity {
     @SuppressLint("SetJavaScriptEnabled")
     private void initWebSettings(){
         final WebSettings settings = mWebView.getSettings();
+        //settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
         settings.setUseWideViewPort(true);
         settings.setUserAgentString(null);
@@ -164,6 +93,7 @@ public class NovaWebActivity extends Activity {
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setRenderPriority(RenderPriority.HIGH);
         settings.setNeedInitialFocus(false);
+
         try {
             if (Build.VERSION.SDK_INT >= (Build.VERSION_CODES.FROYO + 3)) {
                 try {
@@ -177,12 +107,20 @@ public class NovaWebActivity extends Activity {
                 ZoomButtonsController zoom = (ZoomButtonsController) m.invoke(mWebView);
                 zoom.getZoomControls().setLayoutParams(new FrameLayout.LayoutParams(0, 0));
             }
+            if (Build.VERSION.SDK_INT >= 16) {  
+                Class<?> clazz = mWebView.getSettings().getClass();
+                Method method = clazz.getMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
+                if (method != null) {
+                    method.invoke(mWebView.getSettings(), true);
+                }
+            }
         } catch (Throwable ignored) {
         	//ignored.printStackTrace();
         }
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.ECLAIR_MR1) {
             settings.setPluginState(PluginState.ON);
         }
+        mWebView.enableCrossDomain();
     }	
 	
 	public WebView getWebView(){
@@ -203,7 +141,10 @@ public class NovaWebActivity extends Activity {
 	        view.loadUrl(url);
 	        return true;
 	    }
-        
+	    /*@Override
+	    public void onLoadResource (WebView view, String url){
+	    	Log.d("Task", url);
+	    }*/
 	    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
 	        if (view == null || TextUtils.isEmpty(view.getUrl())) {
 	            return;

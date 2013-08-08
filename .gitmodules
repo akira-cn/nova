@@ -13,3 +13,9 @@
 [submodule "pjax"]
 	path = pjax
 	url = git@github.com:welefen/pjax.git
+[submodule "libs/ng-iScroll"]
+	path = libs/ng-iScroll
+	url = git@github.com:ibspoof/ng-iScroll.git
+[submodule "libs/NanoHttpd"]
+	path = libs/NanoHttpd
+	url = git@github.com:NanoHttpd/nanohttpd.git

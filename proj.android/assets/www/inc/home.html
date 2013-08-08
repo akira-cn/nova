@@ -1,8 +1,18 @@
-<div ng-controller="AccordionDemoCtrl">
-  <label class="checkbox">
-    <input type="checkbox" ng-model="oneAtATime">
-    Open only one at a time
-  </label>
+<style type="text/css">
+  #wrapper{
+    position:absolute; z-index:1;
+    top:0; bottom:0; left:0;
+    width:100%;
+    overflow:auto;
+  }
+  #scroller{
+    padding: 3px;
+  }
+</style>
+
+<div id="plutoList" ng-controller="AccordionDemoCtrl">
+  <div id="wrapper" ng-iscroll='wrapper' ng-iscroll-delay='50'>
+    <div id="scroller">
 
   <accordion close-others="oneAtATime">
     <accordion-group heading="Static Header">
@@ -11,18 +21,8 @@
     <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
       {{group.content}}
     </accordion-group>
-    <accordion-group heading="Dynamic Body Content">
-      <p>The body of the accordion group grows to fit the contents</p>
-        <button class="btn btn-small" ng-click="addItem()">Add Item</button>
-        <div ng-repeat="item in items">{{item}}</div>
-    </accordion-group>
-    <accordion-group>
-        <accordion-heading>
-            I can have markup, too! <i class="icon-check"></i>
-        </accordion-heading>
-        This is just some content to illustrate fancy headings.
-    </accordion-group>
   </accordion>
+    
+    <div>
+  </div>
 </div>
-
-<a ng-click="nav.next()">next &gt;</a>

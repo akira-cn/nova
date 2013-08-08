@@ -4,7 +4,7 @@
     android:layout_height="match_parent" 
     android:gravity="fill" >
 
-    <WebView
+    <com.weizoo.nova.lib.NovaWebView
         android:id="@+id/web_nova"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
