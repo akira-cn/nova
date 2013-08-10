@@ -1,5 +1,6 @@
 <nova>
-    <object name="com.weizoo.nova.js.test.Echo" exports="echo"></object>
-    <object name="com.weizoo.nova.js.test.TestClass" exports="TestClass"></object>
     <object name="com.weizoo.nova.js.network.WebSocket" exports="WebSocket"></object>
+    <object name="com.weizoo.nova.js.device.PhoneState" exports="PhoneState"></object>
+    <object name="com.weizoo.nova.js.device.Ringtone" exports="Ringtone"></object>
+    <object name="com.weizoo.nova.js.device.Notifications" exports="Notifications"></object>
 </nova>

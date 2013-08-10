@@ -1,7 +1,5 @@
 package com.weizoo.nova.js;
 
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.json.JSONException;
@@ -10,49 +8,57 @@ import org.json.JSONObject;
 import com.weizoo.nova.lib.NovaWebActivity;
 
 import android.os.Handler;
+import android.webkit.JavascriptInterface;
 
 public class JSObject {
-	
-	protected final WeakReference<NovaWebActivity> mActivity;
-	
 	protected final Handler mMainHandler = new Handler();
 	
 	protected Object[] mArguments;
 	
-	public JSObject(NovaWebActivity activity, Object...args){
-		mActivity = new WeakReference<NovaWebActivity>(activity);
+	public JSObject(Object...args){
 		mArguments = args;
 	}
 	
-	public String keys(){
-		Method[] methods = getClass().getDeclaredMethods();
-		Field[] fields = getClass().getDeclaredFields();
-		String keys = "";
-		for(int i = 0; i < methods.length; i++){
-			if(methods[i].getName().equals("keys")){
-				continue;
-			}
-			keys += methods[i].getName() + ",";
+	@JavascriptInterface
+	public String __reflects__(){
+		Class<?>[] its = getClass().getInterfaces();
+		StringBuilder reflects = new StringBuilder();
+		
+		for(int i = 0; i < its.length; i++){
+			Class<?> it = its[i];
+			Method[] methods = it.getDeclaredMethods();
+			
+			try {
+				for(int j = 0; j < methods.length; j++){
+					Method method = methods[j];
+					JSApi annotation = method.getAnnotation(JSApi.class);
+					if(annotation != null){
+						JSONObject json = new JSONObject();
+		
+						json.put("apiName", method.getName());
+						json.put("apiType", annotation.apiType());
+						json.put("apiRet", annotation.apiRet());
+						json.put("TYPE_METHOD", JSApi.TYPE_METHOD);
+						json.put("TYPE_GETTER", JSApi.TYPE_GETTER);
+						json.put("TYPE_SETTER", JSApi.TYPE_SETTER);
+						json.put("RET_VALUE", JSApi.RET_VALUE);
+						json.put("RET_JSON", JSApi.RET_JSON);
+						
+						reflects.append(json.toString());
+						if(j < methods.length - 1){
+							reflects.append(",");
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}			
 		}
-		for(int j = 0; j < fields.length; j++){
-			if(fields[j].getName().startsWith("this$")){
-				continue;
-			}
-			keys += fields[j].getName() + ",";
-		}
-		return keys.substring(0, keys.length() - 1);
+
+		return "[" + reflects.toString() + "]";
 	}
 	
-	protected JSONObject pick(String param){
-		try {
-			return new JSONObject(param);
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
-	protected void callback(final String result, final String onSuccess){
+	protected void callback(NovaWebActivity activity, final String result, final String onSuccess){
 		JSONObject data = new JSONObject();
 		try {
 			data.put("id", onSuccess);
@@ -61,10 +67,10 @@ public class JSObject {
 			e.printStackTrace();
 		}
 		
-		dispatchEvent("novaCallback", data.toString());
+		dispatchEvent(activity, "novaCallback", data.toString());
 	}
 	
-	protected void callbackEvent(final String type, 
+	protected void callbackEvent(NovaWebActivity activity, final String type, 
 			final String result, final String onSuccess){
 		JSONObject data = new JSONObject();
 		
@@ -76,17 +82,16 @@ public class JSObject {
 			e.printStackTrace();
 		}
 		
-		dispatchEvent("novaCallbackEvent", data.toString());		
+		dispatchEvent(activity, "novaCallbackEvent", data.toString());		
 	}
 	
-	public void postMessage(final String message){
-		this.dispatchEvent("message", message);
+	protected void postMessage(NovaWebActivity activity, final String message){
+		this.dispatchEvent(activity, "message", message);
 	}
 	
-	public void dispatchEvent(final String eventID, final String data){
+	protected void dispatchEvent(final NovaWebActivity activity, final String eventID, final String data){
 		mMainHandler.post(new Runnable() {    
             public void run() {    
-            	NovaWebActivity activity = mActivity.get();
             	if(activity != null){
             		activity.getWebView().loadUrl("javascript:var ev = document.createEvent('Events');ev.initEvent('"+eventID+"',true,true);ev.data='"+data+"';window.dispatchEvent(ev);");
             	}

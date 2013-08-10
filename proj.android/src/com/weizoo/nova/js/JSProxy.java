@@ -8,11 +8,11 @@ public abstract class JSProxy {
 	
 	protected JSObject mJSObject;
 	
-	protected Object exportJavaScriptInterface(NovaWebActivity activity){
-		return new JSObject(activity);
+	protected Object exportJavaScriptInterface(final NovaWebActivity activity){
+		return new JSObject();
 	}
 	
-	public void prepareActivity(NovaWebActivity activity, String strExportName){
+	public void prepareActivity(final NovaWebActivity activity, final String strExportName){
 		mJSObject = (JSObject)exportJavaScriptInterface(activity);
 		WebView webView = activity.getWebView();
 		webView.addJavascriptInterface(mJSObject, strExportName);

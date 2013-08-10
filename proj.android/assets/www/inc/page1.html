@@ -1,7 +1,0 @@
-  <div ng-controller="AlertDemoCtrl">
-    <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
-    <button class='btn' ng-click="addAlert()">Add Alert</button>
-  </div>
-  <div></div>
-  <a ng-click="nav.back()">&lt; previous</a> |
-  <a ng-click="nav.next()">next &gt;</a>

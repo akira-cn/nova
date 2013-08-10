@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.PluginState;
@@ -30,16 +31,8 @@ public class NovaWebActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_novaweb);
-	}
-	@Override
-	protected void onStart(){
-		super.onStart();
+		
 		this.init();
-	}
-	
-	@Override 
-	protected void onStop(){
-		super.onStop();
 	}
 	
 	protected void init(){
@@ -113,6 +106,9 @@ public class NovaWebActivity extends Activity {
                 if (method != null) {
                     method.invoke(mWebView.getSettings(), true);
                 }
+                mWebView.enableCrossDomainNew();
+            }else{
+            	mWebView.enableCrossDomain();
             }
         } catch (Throwable ignored) {
         	//ignored.printStackTrace();
@@ -120,7 +116,6 @@ public class NovaWebActivity extends Activity {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.ECLAIR_MR1) {
             settings.setPluginState(PluginState.ON);
         }
-        mWebView.enableCrossDomain();
     }	
 	
 	public WebView getWebView(){
@@ -152,4 +147,17 @@ public class NovaWebActivity extends Activity {
 	        Log.e("Web Console", description + " at " + failingUrl);
 	    };
 	};
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {//²¶×½·µ»Ø¼ü
+	   if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {   
+		   mWebView.goBack();   
+	       return true;   
+	   }else if(keyCode == KeyEvent.KEYCODE_BACK){
+		   mWebView.loadUrl("about:blank");
+	       finish();
+	       return true; 
+	   }   
+	   return super.onKeyDown(keyCode, event);   
+	}
 }

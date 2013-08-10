@@ -1,28 +1,61 @@
 <style type="text/css">
-  #wrapper{
-    position:absolute; z-index:1;
-    top:0; bottom:0; left:0;
-    width:100%;
-    overflow:auto;
-  }
-  #scroller{
+  .accordion{
     padding: 3px;
   }
+  #plutoList a{
+    text-decoration:none; 
+  }
+  p.operator{
+    float: right;
+    margin-right: 20px;
+  }
+  p.operator >a {
+    padding: 10px 10px 10px 10px;
+  }
+  .accordion-heading a.cmdType{
+    float: right;
+    margin-right: 20px;
+  }
+  .accordion-heading a.cmdType.info{
+    color: green;
+  }
+  .accordion-heading a.cmdType.warn{
+    color: orange;
+  }
+  .accordion-heading a.cmdType.err{
+    color: red;
+  }
+  .accordion-heading span.done{
+    text-decoration:line-through;
+    color: gray;
+    font-style: italic;
+  }
+  .accordion-body p.done{
+    color: gray;
+    font-style: italic;
+  }
+
 </style>
 
-<div id="plutoList" ng-controller="AccordionDemoCtrl">
-  <div id="wrapper" ng-iscroll='wrapper' ng-iscroll-delay='50'>
-    <div id="scroller">
+<div id="plutoList" ng-controller="PlutoCtrl">
 
   <accordion close-others="oneAtATime">
-    <accordion-group heading="Static Header">
-      This content is straight in the template.
+    <accordion-group>
+      <accordion-heading>
+        QAlarm Beta V0.1 
+      </accordion-heading>
+      设备ID: {{deviceId}}
     </accordion-group>
-    <accordion-group heading="{{group.title}}" ng-repeat="group in groups">
-      {{group.content}}
+    <accordion-group ng-repeat="group in groups">
+      <accordion-heading>
+        <span class="{{group.state}}"> {{group.title | date:'yyyy-MM-dd HH:mm:ss'}} </span><a class="cmdType {{group.type}}">{{group.type}}</a>
+      </accordion-heading>
+      <p class="{{group.state}}">{{group.content}}</p> 
+      <p class="operator">
+        <a ng-click="done(group)">处理</a>
+        <a ng-click="remove(group)">删除</a>
+      </p>
     </accordion-group>
   </accordion>
-    
-    <div>
-  </div>
+
 </div>

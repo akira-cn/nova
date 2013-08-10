@@ -21,75 +21,73 @@ angular.module('weizoo.nova', [])
 	var _callbacks = {};
 
 	function _pack(_interface){
-		//fix the bug in early version
-		var keys = (_interface.keys()+"").split(','); 
 
-		if(keys.indexOf('constructor') >= 0){
+		if(_interface.constructor){
 			var ret = function(opt){
 				return _pack(_interface.constructor(
 					typeof opt === 'object' ? JSON.stringify(opt) : opt)
 				);
-			}
-			ret.toString = function(){return 'function(){[native code]}'};
+			};
+			ret.toString = function(){return 'function(){[native code]}'};			
 		}else{
-			var ret = {};
+			ret = {};
 		}
-		for(var j = 0; j < keys.length; j++){
-			var key = keys[j];
-			var method = _interface[key];
-			if(typeof method == 'function'){
-				if(key == 'constructor'){
-					continue;
-				}
-				var func = (function(fn){
-					var _f = function(){
-						var args = [].slice.call(arguments);
 
-						for(var i = 0; i < args.length; i++){
-							var arg = args[i];
-							if(typeof arg == 'function'){ 
-								//find callbacks func by uuid
-								var uuid = _uuid(arg);
-								_callbacks[uuid] = {thisObj: _interface, fn: arg};
-								args[i] = uuid;
-							}else if(typeof arg == 'object'){
-								args[i] = JSON.stringify(arg);
-							}else{
-								args[i] = arg;
-							}
+		var reflects = JSON.parse(_interface.__reflects__());
+
+		reflects.forEach(function(meta){
+			var key = meta.apiName,
+				method = _interface[key];
+
+			//is api returns join?
+			var isRetJSON = (meta.apiRet == meta.RET_JSON);
+
+			var func = (function(fn, isJSON){
+				var _f = function(){
+					var args = [].slice.call(arguments);
+
+					for(var i = 0; i < args.length; i++){
+						var arg = args[i];
+						if(typeof arg == 'function'){ 
+							//find callbacks func by uuid
+							var uuid = _uuid(arg);
+							_callbacks[uuid] = {thisObj: _interface, fn: arg};
+							args[i] = uuid;
+						}else if(typeof arg == 'object'){
+							args[i] = JSON.stringify(arg);
+						}else{
+							args[i] = arg;
 						}
-
-						return fn.apply(_interface, args);
 					}
-					_f.toString = function(){return 'function(){[native code]}'};
-					return _f;
-				})(method);
-				if(/^__getter__/.test(key)){
-					//getter from java
-					var propertyName = key.replace(/^__getter__/, '');
-
-					(function(propertyName, func){
-						ret.__defineGetter__(propertyName, function(){
-							return func();
-						});
-					})(propertyName, func);
-
-				}else if(/^__setter__/.test(key)){
-					var propertyName = key.replace(/^__setter__/, '');
 					
-					(function(propertyName, func){
-						ret.__defineSetter__(propertyName, function(v){
-							return func(v);
-						});		
-					})(propertyName, func);		
-
-				}else{
-					ret[key] = func;
+					var ret = fn.apply(_interface, args);
+					if(isJSON){
+						return JSON.parse(ret);
+					}else{
+						return ret;
+					}						
 				}
+				_f.toString = function(){return 'function(){[native code]}'};
+				return _f;
+			})(method, isRetJSON);
+
+			if(meta.apiType == meta.TYPE_GETTER){
+				(function(propertyName, func){
+					ret.__defineGetter__(propertyName, function(){
+						return func();
+					});
+				})(key, func);				
+			}else if(meta.apiType == meta.TYPE_SETTER){
+				(function(propertyName, func){
+					ret.__defineSetter__(propertyName, function(v){
+						return func(v);
+					});		
+				})(key, func);					
 			}else{
-				ret[key] = method;
+				ret[key] = func;
 			}
-		}
+		});
+		
 		return ret;		
 	}
 
@@ -149,6 +147,52 @@ angular.module('weizoo.nova', [])
 	});
 
 	nova._init();
+
+	function mix(des, src, override) {
+		if (typeof override == 'function') {
+			for (i in src) {
+				des[i] = override(des[i], src[i], i);
+			}
+		}
+		else {
+			for (i in src) {
+				if (override || !(des[i] || (i in des))) { 
+					des[i] = src[i];
+				}
+			}
+		}
+		return des;
+	}
+
+	novaRoot.nova.utils = {};
+	
+	mix(novaRoot.nova.utils, {
+		mix: mix,
+		dateFormat: function(d, pattern) {
+			d = d || new Date();
+			if(!(d instanceof Date)){
+				d = new Date(d);
+			}
+			pattern = pattern || 'yyyy-MM-dd';
+			var y = d.getFullYear().toString(),
+				o = {
+					M: d.getMonth() + 1, //month
+					d: d.getDate(), //day
+					h: d.getHours(), //hour
+					m: d.getMinutes(), //minute
+					s: d.getSeconds() //second
+				};
+			pattern = pattern.replace(/(y+)/ig, function(a, b) {
+				return y.substr(4 - Math.min(4, b.length));
+			});
+			for (var i in o) {
+				pattern = pattern.replace(new RegExp('(' + i + '+)', 'g'), function(a, b) {
+					return (o[i] < 10 && b.length > 1) ? '0' + o[i] : o[i];
+				});
+			}
+			return pattern;
+		},
+	});
 
 	this.$get = function(){
 		return novaRoot.nova;

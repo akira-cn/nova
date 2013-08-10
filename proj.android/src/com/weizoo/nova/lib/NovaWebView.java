@@ -21,7 +21,24 @@ public class NovaWebView extends WebView{
         super(context, attrs);
     }
     
-	public void enableCrossDomain()
+    public void enableCrossDomain()
+    {
+	    try{
+		    Field field = WebView.class.getDeclaredField("mWebViewCore");
+		    field.setAccessible(true);
+		    Object webviewcore=field.get(this);
+		    Method method=webviewcore.getClass().getDeclaredMethod("nativeRegisterURLSchemeAsLocal", String.class);
+		    method.setAccessible(true);  
+		    method.invoke(webviewcore, "http");
+		    method.invoke(webviewcore, "https");
+	    }
+	    catch(Exception   e){
+
+	    	e.printStackTrace();
+	    }
+    }
+    
+	public void enableCrossDomainNew()
 	{
 		try{
 			Field webviewclassic_field = WebView.class.getDeclaredField("mProvider");

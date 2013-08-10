@@ -6,10 +6,51 @@ import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback;
 import com.koushikdutta.async.http.WebSocket.StringCallback;
+import com.weizoo.nova.js.JSApi;
 import com.weizoo.nova.js.JSClass;
 import com.weizoo.nova.js.JSObject;
 import com.weizoo.nova.js.JSProxy;
 import com.weizoo.nova.lib.NovaWebActivity;
+
+interface WebSocketClassDef{
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CONNECTING();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int OPEN();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CLOSING();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CLOSED();
+}
+
+interface WebSocketObjDef{
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CONNECTING();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int OPEN();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CLOSING();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int CLOSED();	
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public String URL();
+	@JSApi(apiType = JSApi.TYPE_GETTER)
+	public int readyState();
+	
+	@JSApi(apiType = JSApi.TYPE_METHOD)
+	public void send(String message);
+	@JSApi(apiType = JSApi.TYPE_METHOD)
+	public void close();
+	
+	@JSApi(apiType = JSApi.TYPE_SETTER)
+	public void onopen(String callbackId);
+	@JSApi(apiType = JSApi.TYPE_SETTER)
+	public void onmessage(String callbackId);
+	@JSApi(apiType = JSApi.TYPE_SETTER)
+	public void onclose(String callbackId);
+	@JSApi(apiType = JSApi.TYPE_SETTER)
+	public void onerror(String callbackId);	
+}
 
 public class WebSocket extends JSProxy{
 	private static final int CONNECTING = 0;
@@ -19,70 +60,43 @@ public class WebSocket extends JSProxy{
 	
 	@Override
 	public Object exportJavaScriptInterface(final NovaWebActivity activity){
-		return new JSClass(activity){
+		class Exports extends JSClass implements WebSocketClassDef{
+
+			@Override
 			@JavascriptInterface
-			public int __getter__CONNECTING(){
+			public int CONNECTING() {
 				return CONNECTING;
 			}
-			
+
+			@Override
 			@JavascriptInterface
-			public int __getter__OPEN(){
+			public int OPEN() {
 				return OPEN;
 			}
-			
+
+			@Override
 			@JavascriptInterface
-			public int __getter__CLOSING(){
+			public int CLOSING() {
 				return CLOSING;
 			}
-			
+
+			@Override
 			@JavascriptInterface
-			public int __getter__CLOSED(){
+			public int CLOSED() {
 				return CLOSED;
 			}
 			
-			@Override
+			@Override 
+			@JavascriptInterface
 			public JSObject constructor(final String url){
 				
 				class WebSocketImpl extends JSObject 
-					implements WebSocketConnectCallback{
-					
+				implements WebSocketConnectCallback, WebSocketObjDef{
+				
 					private com.koushikdutta.async.http.WebSocket webSocket = null;
 					private int readyState = CLOSED;
 					
-					public WebSocketImpl(NovaWebActivity activity, Object... args) {
-						super(activity, args);
-					}
-					
-					@JavascriptInterface
-					public int __getter__CONNECTING(){
-						return CONNECTING;
-					}
-					
-					@JavascriptInterface
-					public int __getter__OPEN(){
-						return OPEN;
-					}
-					
-					@JavascriptInterface
-					public int __getter__CLOSING(){
-						return CLOSING;
-					}
-					
-					@JavascriptInterface
-					public int __getter__CLOSED(){
-						return CLOSED;
-					}
-					
-					@JavascriptInterface
-					public String __getter__URL(){
-						return url;
-					}
-					
-					@JavascriptInterface
-					public int __getter__readyState(){
-						return readyState;
-					}
-					
+					@Override
 					@JavascriptInterface
 					public void send(String message){
 						if(webSocket != null){
@@ -90,36 +104,12 @@ public class WebSocket extends JSProxy{
 						}
 					}
 					
+					@Override
 					@JavascriptInterface
 					public void close(){
 						if(webSocket != null){
 							webSocket.close();
 						}
-					}
-					
-					private String onopen = null;
-					private String onmessage = null;
-					private String onclose = null;
-					private String onerror = null;
-					
-					@JavascriptInterface
-					public void __setter__onopen(String callbackId){
-						onopen = callbackId;
-					}
-					
-					@JavascriptInterface
-					public void __setter__onmessage(String callbackId){
-						onmessage = callbackId;
-					}
-					
-					@JavascriptInterface
-					public void __setter__onclose(String callbackId){
-						onclose = callbackId;
-					}
-					
-					@JavascriptInterface
-					public void __setter__onerror(String callbackId){
-						onerror = callbackId;
 					}
 					
 					@Override
@@ -128,15 +118,15 @@ public class WebSocket extends JSProxy{
 						this.webSocket = webSocket;
 						this.readyState = OPEN;
 						
-		            	if(onopen != null){
-		            		callbackEvent("open", null, onopen);
+		            	if(onopenId != null){
+		            		callbackEvent(activity, "open", null, onopenId);
 		            	}
 		            	
 				        webSocket.setStringCallback(new StringCallback() {
 				            @Override
 				            public void onStringAvailable(String s) {
-				            	if(onmessage != null){
-				            		callbackEvent("message", s, onmessage);
+				            	if(onmessageId != null){
+				            		callbackEvent(activity, "message", s, onmessageId);
 				            	}
 				            }
 				        });	
@@ -146,8 +136,8 @@ public class WebSocket extends JSProxy{
 							public void onCompleted(Exception ex) {
 								readyState = CLOSED;
 								
-								if(onclose != null){
-									callbackEvent("close", null, onclose);
+								if(oncloseId != null){
+									callbackEvent(activity, "close", null, oncloseId);
 								}
 							}
 				        });
@@ -157,21 +147,88 @@ public class WebSocket extends JSProxy{
 							public void onCompleted(Exception ex) {
 								readyState = CLOSED;
 								
-								if(onerror != null){
-									callbackEvent("error", null, onerror);
+								if(onerrorId != null){
+									callbackEvent(activity, "error", null, onerrorId);
 								}
 							}				        	
 				        });
 					}
+
+					private String onopenId = null;
+					private String onmessageId = null;
+					private String oncloseId = null;
+					private String onerrorId = null;
+					
+					@Override
+					@JavascriptInterface
+					public int CONNECTING() {
+						return CONNECTING;
+					}
+
+					@Override
+					@JavascriptInterface
+					public int OPEN() {
+						return OPEN;
+					}
+
+					@Override
+					@JavascriptInterface
+					public int CLOSING() {
+						return CLOSING;
+					}
+
+					@Override
+					@JavascriptInterface
+					public int CLOSED() {
+						return CLOSED;
+					}
+
+					@Override
+					@JavascriptInterface
+					public String URL() {
+						return url;
+					}
+
+					@Override
+					@JavascriptInterface
+					public void onopen(String callbackId) {
+						onopenId = callbackId;
+					}
+
+					@Override
+					@JavascriptInterface
+					public void onmessage(String callbackId) {
+						onmessageId = callbackId;	
+					}
+
+					@Override
+					@JavascriptInterface
+					public void onclose(String callbackId) {
+						oncloseId = callbackId;
+					}
+
+					@Override
+					@JavascriptInterface
+					public void onerror(String callbackId) {
+						onerrorId = callbackId;
+					}
+
+					@Override
+					@JavascriptInterface
+					public int readyState() {
+						return readyState;
+					}
 				};
 				
-				WebSocketImpl socketClient = new WebSocketImpl(activity, url);
+				WebSocketImpl socketClient = new WebSocketImpl();
 				
 				AsyncHttpClient.getDefaultInstance().websocket(url, 
 						null, socketClient);
 				
-				return socketClient;
-			}
-		};
+				return socketClient;				
+			}			
+		}
+		
+		return new Exports();
 	}
 }
