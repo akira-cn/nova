@@ -2,6 +2,9 @@
   .accordion{
     padding: 3px;
   }
+  .accordion-body.collapse{
+    -webkit-transform: translate3d(0, 0, 0);
+  }
   #plutoList a{
     text-decoration:none; 
   }
@@ -25,14 +28,21 @@
   .accordion-heading a.cmdType.err{
     color: red;
   }
-  .accordion-heading span.done{
-    text-decoration:line-through;
-    color: gray;
+  .accordion-heading span.doing,
+  .accordion-heading span.done,
+  .accordion-body div.doing .content,
+  .accordion-body div.done .content{
     font-style: italic;
   }
-  .accordion-body p.done{
+  .accordion-heading span.done,
+  .accordion-body div.done .content{
+    text-decoration:line-through;
     color: gray;
-    font-style: italic;
+  }
+  .accordion-body div.normal a:nth-child(1),
+  .accordion-body div.doing a:nth-child(2),
+  .accordion-body div.done a:nth-child(3){
+    color: red;
   }
 
 </style>
@@ -47,14 +57,18 @@
       设备ID: {{deviceId}}
     </accordion-group>
     <accordion-group ng-repeat="group in groups">
-      <accordion-heading>
+      <accordion-heading >
         <span class="{{group.state}}"> {{group.title | date:'yyyy-MM-dd HH:mm:ss'}} </span><a class="cmdType {{group.type}}">{{group.type}}</a>
       </accordion-heading>
-      <p class="{{group.state}}">{{group.content}}</p> 
-      <p class="operator">
-        <a ng-click="done(group)">处理</a>
-        <a ng-click="remove(group)">删除</a>
-      </p>
+      <div class="{{group.state}}">
+        <p class="content">{{group.content}}</p> 
+        <p class="operator">
+          <a ng-click="undo(group)">未处理</a>
+          <a ng-click="doing(group)">处理中</a>
+          <a ng-click="done(group)">完成</a>
+          <a ng-click="remove(group)">忽略</a>
+        </p>
+      </div>
     </accordion-group>
   </accordion>
 

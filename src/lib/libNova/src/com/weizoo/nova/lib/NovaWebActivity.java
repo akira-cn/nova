@@ -1,9 +1,11 @@
 package com.weizoo.nova.lib;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.PluginState;
@@ -21,31 +24,43 @@ import android.widget.FrameLayout;
 import android.widget.ZoomButtonsController;
 
 import com.weizoo.nova.R;
-import com.weizoo.nova.js.JSProxy;
+import com.weizoo.nova.js.JSHelper;
 
 public class NovaWebActivity extends Activity {
 	
 	protected NovaWebView mWebView;
+	protected FrameLayout mLayout;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_novaweb);
-		
 		this.init();
 	}
 	
 	protected void init(){
-		mWebView = (NovaWebView) findViewById(R.id.web_nova);
+    	// FrameLayout
+        ViewGroup.LayoutParams framelayout_params =
+            new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                       ViewGroup.LayoutParams.MATCH_PARENT);	
+        mLayout = new FrameLayout(this);
+        mLayout.setLayoutParams(framelayout_params);
+        
+		mWebView = new NovaWebView(this);
 		initWebSettings();
         mWebView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        mLayout.addView(mWebView);     
         
         initProxy();
 		
-        //mWebView.loadUrl("http://127.0.0.1:7501/index.html");
-        mWebView.loadUrl("file:///android_asset/www/index.html");
 	    mWebView.setWebViewClient(mViewClient);
 	    mWebView.setWebChromeClient(mChromeClient);
+
+        // Set framelayout as the content view
+		setContentView(mLayout);
+	}
+	
+	public void loadUrl(String url){
+		mWebView.loadUrl(url);
 	}
 	
     private void initProxy(){
@@ -57,8 +72,16 @@ public class NovaWebActivity extends Activity {
 					if(strTagName.equals("object")){
 						String strClassName = xmlBirds.getAttributeValue(null, "name");
 						String strExportName = xmlBirds.getAttributeValue(null, "exports");
-				        JSProxy proxy = (JSProxy) Class.forName(strClassName).newInstance();
-				        proxy.prepareActivity(this, ".nova." + strExportName);
+						Class<?> cls = Class.forName(strClassName);
+						Constructor<?> ctor[]=cls.getDeclaredConstructors(); 
+						for(int i = 0; i < ctor.length; i++){
+							Class<?> cx[]=ctor[i].getParameterTypes();
+							if(cx.length == 1 && cx[0] == Context.class){
+						        JSHelper helper = (JSHelper) cls.getConstructor(cx)
+						        		.newInstance(this);
+						        getWebView().addJavascriptInterface(helper, ".nova." + strExportName);								
+							}
+						}
 					}
 				}
 				xmlBirds.next();
@@ -83,7 +106,6 @@ public class NovaWebActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setLoadWithOverviewMode(false);
         settings.setSupportZoom(true);
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setRenderPriority(RenderPriority.HIGH);
         settings.setNeedInitialFocus(false);
 
@@ -118,8 +140,12 @@ public class NovaWebActivity extends Activity {
         }
     }	
 	
-	public WebView getWebView(){
+	public NovaWebView getWebView(){
 		return mWebView;
+	}
+
+	public FrameLayout getLayout(){
+		return mLayout;
 	}
 	
 	private WebChromeClient mChromeClient = new WebChromeClient() {
@@ -149,7 +175,7 @@ public class NovaWebActivity extends Activity {
 	};
 	
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {//²¶×½·µ»Ø¼ü
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
 	   if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {   
 		   mWebView.goBack();   
 	       return true;   

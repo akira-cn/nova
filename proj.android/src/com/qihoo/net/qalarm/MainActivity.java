@@ -9,5 +9,6 @@ public class MainActivity extends NovaWebActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.loadUrl("file:///android_asset/www/index.html");
 	}
 }

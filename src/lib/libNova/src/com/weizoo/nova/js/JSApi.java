@@ -10,6 +10,7 @@ public @interface JSApi {
 	
 	static final int RET_VALUE = 0;
 	static final int RET_JSON = 1;
+	static final int RET_FUNC = 2;
 	
 	int apiType() default TYPE_METHOD;
 	int apiRet() default RET_VALUE;
